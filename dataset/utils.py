@@ -62,24 +62,31 @@ class DomainGeneralizationDataset(Dataset):
         return len(self.examples)
 
     def __getitem__(self, index):
-        domain_data = self.examples[index]
+        item = self.examples[index]
 
-        # Ensure that domain_data contains three tuples (one for each domain)
-        if len(domain_data) != 3:
-            raise ValueError(f"Expected 3 tuples per item, got {len(domain_data)}")
+        # Check if the item is for single domain or multiple domains
+        if isinstance(item[0], tuple):  # Multi-domain        # Ensure that domain_data contains three tuples (one for each domain)
+            if len(item) != 3:
+                raise ValueError(f"Expected 3 tuples per item, got {len(item)}")
 
-        results = []
-        for img_path, label in domain_data:
+            results = []
+            for img_path, label in item:
+                img = Image.open(img_path).convert('RGB')
+                img = self.transform(img)
+                label = torch.tensor(label).long()
+                results.extend([img, label])  # This should add 2 items per domain
+
+            if len(results) != 6:
+                raise ValueError(f"Expected 6 items (3 images and 3 labels), got {len(results)}")
+
+            return tuple(results)
+        else:  # Single domain (for testing)
+            img_path, label = item
             img = Image.open(img_path).convert('RGB')
             img = self.transform(img)
             label = torch.tensor(label).long()
-            results.extend([img, label])  # This should add 2 items per domain
-
-        if len(results) != 6:
-            raise ValueError(f"Expected 6 items (3 images and 3 labels), got {len(results)}")
-
-        return tuple(results)
-    
+            return img, label  # Return single image and label
+        
     
 class SeededDataLoader(DataLoader):
     def init(self, dataset: Dataset, batch_size=1, shuffle=None, 
