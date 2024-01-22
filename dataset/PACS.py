@@ -147,8 +147,7 @@ def load_data():
         num_examples = max(len(domain_data[domain]) for domain in source_domains)
 
         # Combine examples from each source domain into tuples
-        source_examples = [tuple(next(it) for it in iterators) for _ in range(num_examples)]
-
+        source_examples = [(next(iterators[0]), next(iterators[1]), next(iterators[2])) for _ in range(num_examples)]
         # Create Domain Generalization datasets
         train_dataset = DomainGeneralizationDataset(source_examples, transform=train_transform)
         test_dataset = DomainGeneralizationDataset(domain_data[target_domain], transform=test_transform)

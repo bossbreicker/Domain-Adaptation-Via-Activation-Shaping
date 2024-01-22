@@ -55,27 +55,32 @@ class DomainAdaptationDataset(Dataset):
 # Hint: combine the examples from the 3 source domains into a single 'examples' list
 class DomainGeneralizationDataset(Dataset):
     def __init__(self, examples, transform):
-        # examples is a list where each element is a tuple (img_path1, img_path2, img_path3)
         self.examples = examples
         self.transform = transform
-    
+
     def __len__(self):
         return len(self.examples)
-    
+
     def __getitem__(self, index):
-        # Get paths for three images
-        img_path1, img_path2, img_path3 = self.examples[index]
+        domain_data = self.examples[index]
 
-        # Load and transform each image
-        x1 = Image.open(img_path1).convert('RGB')
-        x2 = Image.open(img_path2).convert('RGB')
-        x3 = Image.open(img_path3).convert('RGB')
-        x1, x2, x3 = self.transform(x1), self.transform(x2), self.transform(x3)
+        # Ensure that domain_data contains three tuples (one for each domain)
+        if len(domain_data) != 3:
+            raise ValueError(f"Expected 3 tuples per item, got {len(domain_data)}")
 
-        return x1, x2, x3
+        results = []
+        for img_path, label in domain_data:
+            img = Image.open(img_path).convert('RGB')
+            img = self.transform(img)
+            label = torch.tensor(label).long()
+            results.extend([img, label])  # This should add 2 items per domain
 
-######################################################
+        if len(results) != 6:
+            raise ValueError(f"Expected 6 items (3 images and 3 labels), got {len(results)}")
 
+        return tuple(results)
+    
+    
 class SeededDataLoader(DataLoader):
     def init(self, dataset: Dataset, batch_size=1, shuffle=None, 
                  sampler=None, 
