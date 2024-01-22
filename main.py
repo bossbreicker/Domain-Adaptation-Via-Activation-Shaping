@@ -102,6 +102,7 @@ def train(model, data):
                     zs = zs.to('cuda:0')
                     src_y = src_y.to('cuda:0')
                     loss = F.cross_entropy(zs, src_y)
+                    
                 elif CONFIG.experiment in ['DomainGeneralization']:
                     # Unpack the batch (three inputs from different domains)
                     x1, y1, x2, y2, x3, y3 = batch
